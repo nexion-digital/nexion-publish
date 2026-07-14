@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>MotionOps · Publish</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 93,28 93,72 50,95 7,72 7,28' fill='%2341AE75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D1B2E; --panel:#12233B; --panel2:#0F1E33; --border:#1E3350; --border2:#2A4368;
+  --green:#41AE75; --green-soft:#E8F4EE; --green-dim:rgba(65,174,117,.14);
+  --text:#F2F6FA; --muted:#8FA3BC; --muted2:#5F7590;
+  --amber:#F59E0B; --red:#EF4444; --blue:#3B82F6;
+  --disp:'Plus Jakarta Sans',sans-serif; --body:'Inter',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(900px 500px at 80% -10%,rgba(65,174,117,.10),transparent 60%),radial-gradient(700px 400px at -10% 110%,rgba(59,130,246,.06),transparent 60%);pointer-events:none}
+header{display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--border);position:relative}
+header .logo{height:26px;display:block}
+header .tag{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);border:1px solid var(--green);border-radius:6px;padding:3px 9px}
+nav{display:flex;gap:4px;margin-left:18px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:4px}
+nav button{background:transparent;border:none;border-radius:7px;color:var(--muted);font-family:var(--disp);font-weight:700;font-size:12.5px;padding:7px 16px;cursor:pointer;transition:.13s}
+nav button.on{background:var(--green);color:#fff}
+header .conn{margin-left:auto;display:flex;gap:8px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted2)}
+.dot.on{background:var(--green);box-shadow:0 0 8px rgba(65,174,117,.8)}
+main{max-width:1120px;margin:0 auto;padding:28px;display:grid;grid-template-columns:minmax(340px,460px) 1fr;gap:24px;position:relative}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+h2{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card+.card{margin-top:18px}
+
+/* lock screen */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center}
+#lock .box{width:min(360px,90vw);text-align:center}
+#lock .hex{margin-bottom:18px}
+#lock h1{font-family:var(--disp);font-weight:800;font-size:20px;margin-bottom:6px}
+#lock p{color:var(--muted);font-size:13px;margin-bottom:22px}
+#lock input{width:100%;background:var(--panel2);border:1.5px solid var(--border2);border-radius:11px;color:var(--text);font-family:var(--mono);font-size:15px;padding:13px 16px;outline:none;text-align:center;letter-spacing:.08em}
+#lock input:focus{border-color:var(--green)}
+#lock button{width:100%;margin-top:12px;background:var(--green);border:none;border-radius:11px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14.5px;padding:13px;cursor:pointer}
+#lock .err{color:var(--red);font-size:12.5px;margin-top:12px;min-height:16px}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#lock .shake{animation:shake .3s}
+
+/* dropzone */
+#drop{border:2px dashed var(--border2);border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:.15s;text-align:center;padding:20px;position:relative}
+#drop:hover,#drop.over{border-color:var(--green);background:var(--green-dim)}
+#drop .big{font-family:var(--disp);font-weight:700;font-size:16px}
+#drop .hint{color:var(--muted);font-size:12.5px;line-height:1.5}
+#previews{display:none;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px}
+.pv{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border2);background:#000;aspect-ratio:4/5}
+.pv img,.pv video{width:100%;height:100%;object-fit:cover;display:block}
+.pv .x{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1}
+.pv .badge{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-family:var(--mono)}
+
+/* caption */
+textarea{width:100%;min-height:150px;background:var(--panel2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--body);font-size:14px;line-height:1.55;padding:12px 14px;resize:vertical;outline:none}
+textarea:focus{border-color:var(--green)}
+.cap-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--muted)}
+.cap-meta .warn{color:var(--amber)}
+#hashRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:var(--green-dim);border:1px solid rgba(65,174,117,.35);color:var(--green-soft);font-size:12px;padding:4px 10px;border-radius:20px;cursor:pointer;user-select:none}
+.chip:hover{background:rgba(65,174,117,.25)}
+
+/* platforms */
+.plats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.plat{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1.5px solid var(--border2);border-radius:11px;padding:11px 13px;cursor:pointer;transition:.13s}
+.plat.sel{border-color:var(--green);background:var(--green-dim)}
+.plat.dis{opacity:.4;cursor:not-allowed}
+.plat .ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.plat .nm{font-family:var(--disp);font-weight:700;font-size:13.5px}
+.plat .ac{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.plat .chk{margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.plat.sel .chk{background:var(--green);border-color:var(--green)}
+
+/* when */
+.tabs{display:flex;gap:8px}
+.tabs button{flex:1;background:var(--panel2);border:1.5px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--disp);font-weight:700;font-size:13px;padding:10px;cursor:pointer;transition:.13s}
+.tabs button.on{background:var(--green);border-color:var(--green);color:#fff}
+#schedPanel{display:none;margin-top:14px}
+
+/* month grid (shared) */
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mnav .mt{font-family:var(--disp);font-weight:800;font-size:14.5px;color:var(--green)}
+.mnav .btns{display:flex;gap:6px}
+.mnav button{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;padding:5px 12px;cursor:pointer}
+.mnav button:hover{border-color:var(--green)}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+.dow span{text-align:center;font-size:9.5px;color:var(--muted2);font-weight:600;letter-spacing:.06em}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.mday{text-align:center;padding:6px 2px 5px;border-radius:8px;border:1px solid var(--border2);background:var(--panel2);cursor:pointer;min-height:44px}
+.mday.blank{border-color:transparent;background:transparent;cursor:default}
+.mday.past{opacity:.32;cursor:not-allowed}
+.mday.sel{border-color:var(--green);background:var(--green-dim)}
+.mday .dn{font-size:12.5px;font-weight:600;font-family:var(--disp)}
+.mday .dn.today{color:var(--green)}
+.mday .dots{height:8px;line-height:8px}
+.mday .dots span{display:inline-block;width:5px;height:5px;border-radius:50%;margin:0 1px}
+#busyList{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7}
+#busyList b{color:var(--text)}
+#busyList .t{font-family:var(--mono);color:var(--green)}
+.times{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.times button{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12.5px;padding:7px 11px;cursor:pointer}
+.times button:hover{border-color:var(--green)}
+.times input{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:7px 10px;outline:none;color-scheme:dark}
+
+/* publish btn */
+#pubBtn{width:100%;background:var(--green);border:none;border-radius:12px;color:#fff;font-family:var(--disp);font-weight:800;font-size:15.5px;padding:15px;cursor:pointer;transition:.15s;letter-spacing:.02em}
+#pubBtn:hover{filter:brightness(1.08)}
+#pubBtn:disabled{opacity:.45;cursor:not-allowed}
+#prog{display:none;margin-top:14px}
+#bar{height:6px;border-radius:6px;background:var(--panel2);overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s}
+#stage{font-size:12.5px;color:var(--muted);margin-top:8px}
+#results{margin-top:12px;display:none;flex-direction:column;gap:8px}
+.res{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border2);border-radius:10px;padding:10px 13px;font-size:13px}
+.res.ok{border-color:rgba(65,174,117,.5)}
+.res.err{border-color:rgba(239,68,68,.5)}
+.res a{color:var(--green);text-decoration:none}
+
+/* calendar page */
+#pageCal{max-width:1120px;margin:0 auto;padding:28px;display:none;position:relative}
+#calBig .mgrid{gap:7px}
+#calBig .cday{border:1px solid var(--border2);background:var(--panel2);border-radius:10px;min-height:96px;padding:7px 8px;text-align:left;overflow:hidden}
+#calBig .cday.blank{border-color:transparent;background:transparent}
+#calBig .cday.today{border-color:var(--green)}
+#calBig .cday .dn{font-family:var(--disp);font-weight:700;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+#calBig .cday.today .dn{color:var(--green)}
+.ent{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;border-radius:5px;padding:2px 3px;transition:background .12s}
+.ent:hover{background:rgba(65,174,117,.15)}
+.ent.dragging{opacity:.35}
+.ent .pd{width:6px;height:6px;border-radius:50%;flex:none}
+.ent .tm{font-family:var(--mono);color:var(--green);flex:none}
+.ent .tx{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.more{font-size:10px;color:var(--muted2)}
+#calBig .cday.dropok{border-color:var(--green);background:var(--green-dim)}
+
+/* edit modal */
+#edModal{position:fixed;inset:0;background:rgba(5,12,22,.75);z-index:90;display:none;align-items:center;justify-content:center;padding:20px}
+#edModal.open{display:flex}
+#edBox{width:min(480px,94vw);background:var(--panel);border:1px solid var(--border2);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto}
+#edBox h3{font-family:var(--disp);font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+#edMedia{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+#edMedia img,#edMedia video{width:84px;height:105px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);background:#000}
+#edBox textarea{min-height:110px;margin-bottom:12px}
+.edRow{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.edRow input{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;outline:none;color-scheme:dark}
+.edRow input:focus{border-color:var(--green)}
+.edPl{display:flex;gap:6px;flex-wrap:wrap}
+.edPl span{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);text-transform:capitalize}
+.edBtns{display:flex;gap:8px;margin-top:6px}
+.edBtns button{border:none;border-radius:10px;font-family:var(--disp);font-weight:700;font-size:13.5px;padding:11px 16px;cursor:pointer}
+#edSave{flex:1;background:var(--green);color:#fff}
+#edDel{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.4)!important}
+#edCancel{background:var(--panel2);color:var(--muted);border:1px solid var(--border2)!important}
+#edStage{font-size:12px;color:var(--muted);margin-top:10px;min-height:15px}
+footer{text-align:center;color:var(--muted2);font-size:11.5px;padding:20px}
+footer a{color:var(--muted2)}
+</style>
+</head>
+<body>
+
+<div id="lock" style="display:none">
+  <div class="box">
+    <svg class="hex" width="54" height="54" viewBox="0 0 100 100"><polygon points="50,5 93,28 93,72 50,95 7,72 7,28" fill="#41AE75"/></svg>
+    <h1>MotionOps Publish</h1>
+    <p>Enter your access key to continue.</p>
+    <input type="password" id="lockIn" placeholder="access key" autocomplete="current-password">
+    <button id="lockBtn">Unlock</button>
+    <div class="err" id="lockErr"></div>
+  </div>
+</div>
+
+<header>
+  <svg class="logo" viewBox="0 0 5300 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1693.93 608.352L1644.2 614.752L1535.14 478.432V775.904H1410.02V230.688H1493.41L1667.43 460L1826.98 230.688H1907.17V775.968H1782.05V487.328L1693.86 608.416L1693.93 608.352ZM2187.24 784.735C2145 784.735 2107.88 776.992 2075.75 761.504C2043.69 746.016 2018.53 723.04 2000.36 692.512C1982.69 661.536 1973.93 624.352 1973.93 581.024C1974.44 537.696 1983.78 500.832 2001.96 470.368C2020.65 439.904 2046.05 416.352 2078.12 399.776C2110.69 383.2 2147.62 374.944 2188.77 374.944C2229.93 374.944 2268.13 382.944 2300.26 399.008C2332.33 415.072 2357.48 438.56 2375.65 469.6C2393.83 500.064 2402.92 537.504 2402.92 581.856C2402.92 626.208 2393.57 660.448 2374.82 690.912C2356.13 721.376 2330.47 744.608 2297.83 760.672C2265.77 776.736 2228.9 784.735 2187.17 784.735H2187.24ZM2188.07 681.312C2205.73 681.312 2220.71 677.28 2233 669.28C2245.8 660.704 2255.72 648.992 2262.69 634.016C2269.67 619.04 2273.13 601.696 2273.13 581.92C2273.13 562.144 2269.67 544.48 2262.69 528.992C2256.29 513.504 2246.63 501.472 2233.83 492.896C2221.54 483.808 2206.82 479.264 2189.73 479.264C2172.65 479.264 2157.41 483.552 2144.04 492.064C2131.24 500.64 2121.32 512.352 2114.41 527.328C2107.43 542.304 2103.97 560.224 2103.97 581.024C2103.97 600.288 2107.43 617.632 2114.41 633.12C2121.38 648.096 2130.98 659.872 2143.27 668.384C2156.07 676.96 2171.05 681.184 2188.2 681.184L2188.07 681.312ZM2704.55 395.872L2727.01 492.896H2617.96V623.584C2617.96 641.76 2622.5 656.48 2631.59 667.68C2640.68 678.368 2653.22 683.744 2669.29 683.744C2676.77 683.744 2684.77 682.912 2693.35 681.312C2701.93 679.2 2710.44 675.936 2719.01 671.712L2755.11 759.135C2749.22 763.936 2740.97 768.736 2730.28 773.6C2719.59 777.888 2708.07 781.344 2695.78 784.031C2683.49 787.232 2672.23 788.831 2662.12 788.831C2630.05 788.831 2601.45 783.2 2576.29 772C2551.14 760.8 2530.85 744.224 2515.37 722.272C2500.39 699.808 2492.9 672.544 2492.9 640.48V492.96H2436.77V395.936H2492.9V296.48L2618.02 277.216V395.872H2704.61H2704.55ZM2940.26 775.968H2814.37V387.04H2940.26V775.968ZM2876.9 333.344C2858.21 333.344 2841.89 326.688 2828.01 313.312C2814.63 299.424 2807.97 283.104 2807.97 264.416C2807.97 245.728 2814.63 228.896 2828.01 215.52C2841.89 201.632 2858.21 194.656 2876.9 194.656C2895.59 194.656 2911.91 201.632 2925.8 215.52C2939.69 228.896 2946.66 245.216 2946.66 264.416C2946.66 283.616 2939.69 299.424 2925.8 313.312C2912.42 326.688 2896.1 333.344 2876.9 333.344ZM3207.91 784.799C3165.67 784.799 3128.55 777.056 3096.42 761.568C3064.36 746.08 3039.21 723.104 3021.03 692.576C3003.37 661.6 2994.6 624.416 2994.6 581.088C2995.11 537.76 3004.45 500.896 3022.63 470.432C3041.32 439.968 3066.73 416.416 3098.79 399.84C3131.43 383.264 3168.29 375.008 3209.44 375.008C3250.6 375.008 3288.8 383.008 3320.93 399.072C3353 415.136 3378.15 438.624 3396.32 469.664C3414.5 500.128 3423.59 537.568 3423.59 581.92C3423.59 626.272 3414.24 660.512 3395.56 690.976C3376.87 721.44 3351.2 744.672 3318.56 760.736C3286.5 776.799 3249.64 784.799 3207.91 784.799ZM3208.68 681.376C3226.34 681.376 3241.32 677.344 3253.6 669.344C3266.47 660.768 3276.32 649.056 3283.3 634.08C3290.28 619.104 3293.73 601.76 3293.73 581.984C3293.73 562.208 3290.28 544.544 3283.3 529.056C3276.9 513.568 3267.24 501.536 3254.44 492.96C3242.15 483.872 3227.43 479.328 3210.34 479.328C3193.25 479.328 3178.02 483.616 3164.65 492.128C3151.78 500.704 3141.92 512.416 3134.95 527.392C3127.97 542.368 3124.52 560.288 3124.52 581.088C3124.52 600.352 3127.97 617.696 3134.95 633.184C3141.92 648.16 3151.53 659.936 3163.81 668.448C3176.68 677.024 3191.59 681.248 3208.74 681.248L3208.68 681.376ZM3604.13 775.968H3478.24V387.04H3556L3577.64 427.936C3592.61 418.336 3608.61 409.504 3625.76 401.504C3643.43 392.928 3661.03 386.272 3678.69 381.472C3696.87 376.672 3714.79 374.24 3732.39 374.24C3766.63 374.24 3793.57 381.216 3813.35 395.104C3833.12 408.48 3847.27 426.912 3855.84 450.4C3864.93 473.376 3869.48 499.552 3869.48 528.992V775.968H3744.42V537.824C3744.42 519.136 3740.39 504.416 3732.39 493.728C3724.39 482.528 3712.1 476.896 3695.52 476.896C3685.92 476.896 3675.49 478.752 3664.23 482.528C3653.54 485.728 3642.85 490.016 3632.16 495.328C3621.99 500.704 3612.64 505.76 3604.13 510.56V775.968Z" fill="white"></path>
+<path d="M4853.35 398.24C4823.97 382.752 4789.48 375.008 4749.93 375.008C4730.66 375.008 4712.23 378.208 4694.63 384.608C4676.97 391.008 4660.71 399.84 4645.73 411.04C4645.29 411.36 4644.9 411.744 4644.45 412.064L4622.5 387.808H4559.14V951.519L4684.2 943.519V771.807C4687.91 773.28 4691.62 774.688 4695.4 775.904C4712.49 781.792 4728.81 784.735 4744.29 784.735C4786.53 784.735 4822.63 776.736 4852.58 760.672C4882.53 744.096 4905.77 720.608 4922.34 690.144C4938.92 659.168 4947.17 621.728 4947.17 577.888C4947.17 534.048 4938.92 497.184 4922.34 467.232C4905.77 436.768 4882.79 413.792 4853.41 398.304L4853.35 398.24ZM4808.42 633.952C4802.02 650.016 4792.93 662.56 4781.16 671.648C4769.38 680.224 4755.49 684.448 4739.43 684.448C4723.37 684.448 4707.37 680.736 4691.3 673.248C4688.93 672.032 4686.5 670.624 4684.07 669.152V493.984C4686.18 492.512 4688.42 490.976 4690.47 489.632C4705.45 480.544 4720.68 476 4736.17 476C4753.83 476 4768.49 480.288 4780.26 488.8C4792.55 496.8 4801.89 508.576 4808.36 524.064C4814.76 539.04 4817.96 557.216 4817.96 578.592C4817.96 599.968 4814.76 617.888 4808.36 633.952H4808.42Z" fill="white"></path>
+<path d="M5273.13 599.52C5259.75 582.944 5242.66 569.056 5221.8 557.792C5201.51 546.016 5180.65 536.416 5159.27 528.928C5146.41 524.64 5134.69 519.84 5124.01 514.464C5113.83 509.088 5108.77 503.52 5108.77 497.632C5108.77 490.656 5112.81 484.832 5120.81 479.968C5128.81 475.168 5139.24 472.736 5152.1 472.736C5167.59 472.736 5183.65 475.168 5200.23 479.968C5216.81 484.256 5233.64 490.144 5250.73 497.632L5287.59 415.84C5273.13 405.664 5257.13 397.664 5239.46 391.776C5222.37 385.888 5205.22 381.6 5188.13 378.976C5171.56 376.288 5157.93 374.944 5147.24 374.944C5096.42 374.944 5056.61 385.888 5027.75 407.84C4998.89 429.728 4984.42 460.256 4984.42 499.232C4984.42 521.696 4991.08 540.96 5004.45 556.96C5018.34 573.024 5035.75 586.336 5056.55 597.024C5077.41 607.712 5098.21 616.8 5119.08 624.288C5129.77 626.976 5139.11 630.432 5147.17 634.72C5155.17 639.008 5161.32 643.552 5165.61 648.352C5169.89 652.64 5172.01 657.184 5172.01 661.984C5172.01 667.36 5169.32 671.904 5164.01 675.616C5159.21 679.328 5153.06 682.272 5145.57 684.448C5138.6 686.56 5131.11 687.648 5123.11 687.648C5114.02 687.648 5103.33 686.304 5091.05 683.616C5078.76 680.928 5066.21 677.728 5053.35 674.016C5041.06 669.728 5029.03 665.184 5017.25 660.384L4981.16 742.176C4994.53 752.352 5010.85 760.864 5030.05 767.839C5049.83 774.24 5068.84 778.527 5087.01 780.639C5105.7 783.328 5120.42 784.672 5131.11 784.672C5184.55 784.672 5224.93 773.727 5252.2 751.776C5279.46 729.312 5293.09 698.592 5293.09 659.552C5293.09 636 5286.44 615.968 5273.06 599.392L5273.13 599.52Z" fill="white"></path>
+<path d="M4371.37 256.352C4330.73 231.2 4281.32 218.656 4223.01 218.656C4169 219.168 4121.45 231.776 4080.3 256.352C4039.14 280.416 4006.76 314.08 3983.27 357.408C3959.72 400.16 3948.01 449.632 3948.01 505.76C3948.01 557.6 3958.95 604.896 3980.9 647.712C4002.86 690.464 4034.34 724.448 4075.5 749.536C4116.65 774.688 4165.86 787.231 4223.01 787.231C4277.54 786.719 4325.42 774.432 4366.57 750.368C4407.72 725.792 4439.78 692.128 4462.76 649.312C4486.31 605.984 4498.02 556.32 4498.02 500.192C4498.02 447.776 4487.08 400.48 4465.13 358.24C4443.75 315.488 4412.45 281.504 4371.3 256.416L4371.37 256.352ZM4348.13 601.952C4335.33 628.704 4317.93 648.736 4296.04 662.112C4274.09 675.488 4249.51 682.144 4222.25 682.144C4192.29 682.144 4166.38 674.656 4144.49 659.68C4123.11 644.192 4106.54 623.072 4094.76 596.32C4083.56 569.568 4077.93 539.104 4077.93 504.928C4077.93 468.064 4084.58 436.256 4097.96 409.504C4111.34 382.752 4129.26 361.952 4151.66 346.976C4174.12 332 4198.18 324.512 4223.85 324.512C4254.31 324.512 4280.23 332.256 4301.61 347.744C4322.98 362.72 4339.3 383.264 4350.5 409.504C4362.28 435.68 4368.17 465.888 4368.17 500.128C4368.17 540.768 4361.51 574.688 4348.13 601.952Z" fill="white"></path>
+<path d="M716.799 627.999C787.491 627.999 844.799 570.692 844.799 499.999C844.799 429.307 787.491 372 716.799 372C646.106 372 588.799 429.307 588.799 499.999C588.799 570.692 646.106 627.999 716.799 627.999Z" fill="white"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M338.371 644.575L470.147 568.479C464.131 546.655 460.803 523.743 460.803 500C460.803 358.624 575.427 244 716.803 244C788.355 244 852.995 273.376 899.395 320.672L1031.17 244.576L993.795 179.872C965.251 130.464 912.515 100 855.491 100H578.051C520.963 100 468.291 130.464 439.747 179.872L300.995 420.128C272.451 469.536 272.451 530.4 300.995 579.871L338.371 644.575Z" fill="white"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M1095.24 355.425L963.46 431.521C969.476 453.345 972.804 476.257 972.804 500.001C972.804 641.376 858.181 756 716.805 756C645.253 756 580.613 726.624 534.213 679.328L402.437 755.424L439.813 820.128C468.357 869.536 521.093 900 578.117 900H855.557C912.645 900 965.316 869.536 993.86 820.128L1132.61 579.873C1161.16 530.465 1161.16 469.601 1132.61 420.129L1095.24 355.425Z" fill="white"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M224.064 662.687H166.4C131.072 662.687 102.4 691.358 102.4 726.686C102.4 762.014 131.072 790.686 166.4 790.686H297.92L224 662.687H224.064Z" fill="white"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M168.32 435.999H63.9999C28.672 435.999 0 464.671 0 499.999C0 535.327 28.672 563.999 63.9999 563.999H168.32C150.464 523.231 150.464 476.767 168.32 435.999Z" fill="white"></path>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M224.64 336.287L298.56 208.287H166.4C131.072 208.287 102.4 236.959 102.4 272.287C102.4 307.615 131.072 336.287 166.4 336.287H224.64Z" fill="white"></path>
+</svg>
+  <span class="tag">Publish</span>
+  <nav id="nav">
+    <button data-page="pub" class="on">Publish</button>
+    <button data-page="cal">Calendar</button>
+  </nav>
+  <div class="conn" id="conn"><span class="dot"></span><span style="font-size:12px;color:var(--muted)">connecting…</span></div>
+</header>
+
+<main id="pagePub">
+  <section>
+    <div class="card">
+      <h2>Visual</h2>
+      <div id="drop">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#41AE75" stroke-width="1.6"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <div class="big">Drop your visual here</div>
+        <div class="hint">Video (MP4) or images (PNG/JPG/WEBP)<br>Multiple images = carousel · click to browse</div>
+        <input type="file" id="file" accept="video/mp4,video/quicktime,video/webm,image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+      </div>
+      <div id="previews"></div>
+    </div>
+
+    <div class="card">
+      <h2>Caption</h2>
+      <textarea id="caption" placeholder="Write the caption… hashtags included."></textarea>
+      <div class="cap-meta"><span id="capCount">0 characters</span><span id="capLimit"></span></div>
+      <div id="hashRow"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>Where</h2>
+      <div class="plats" id="plats"></div>
+    </div>
+
+    <div class="card">
+      <h2>When</h2>
+      <div class="tabs" id="whenTabs">
+        <button data-when="now" class="on">Post now</button>
+        <button data-when="schedule">Schedule</button>
+        <button data-when="draft">Draft</button>
+      </div>
+      <div id="schedPanel">
+        <div class="mnav">
+          <span class="mt" id="pickTitle"></span>
+          <div class="btns"><button id="pickPrev">‹</button><button id="pickToday">Today</button><button id="pickNext">›</button></div>
+        </div>
+        <div class="dow"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+        <div class="mgrid" id="pickGrid"></div>
+        <div class="times">
+          <input type="time" id="schedTime" value="18:00">
+          <button data-qt="09:00">09:00</button>
+          <button data-qt="12:30">12:30</button>
+          <button data-qt="18:00">18:00</button>
+          <button data-qt="20:00">20:00</button>
+          <button id="freeSlot" style="border-color:var(--green);color:var(--green)">✦ Free slot</button>
+        </div>
+        <div id="busyList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <button id="pubBtn" disabled>Publish</button>
+      <div id="prog"><div id="bar"><i></i></div><div id="stage"></div></div>
+      <div id="results"></div>
+    </div>
+  </section>
+</main>
+
+<section id="pageCal">
+  <div class="card" id="calBig">
+    <div class="mnav">
+      <span class="mt" id="calTitle"></span>
+      <div class="btns"><button id="calPrev">‹</button><button id="calToday">Today</button><button id="calNext">›</button><button id="calRefresh">↻</button></div>
+    </div>
+    <div class="dow"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+    <div class="mgrid" id="calGrid"></div>
+    <div id="calLegend" style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)"></div>
+  </div>
+</section>
+
+<div id="edModal">
+  <div id="edBox">
+    <h3><span class="pd" id="edDot" style="width:9px;height:9px;border-radius:50%;display:inline-block"></span>Edit scheduled post</h3>
+    <div id="edMedia"></div>
+    <textarea id="edText"></textarea>
+    <div class="edRow">
+      <input type="date" id="edDate">
+      <input type="time" id="edTime">
+      <div class="edPl" id="edPl"></div>
+    </div>
+    <div class="edBtns">
+      <button id="edSave">Save changes</button>
+      <button id="edDel">Delete</button>
+      <button id="edCancel">Cancel</button>
+    </div>
+    <div id="edStage"></div>
+  </div>
+</div>
+
+<footer>MotionOps Publish · via ContentStudio · Nexion · <a href="#" id="lockOut">change key</a></footer>
+
+<script>
+const API={url:'https://nexion-social.nexion.workers.dev'};
+const $=s=>document.querySelector(s);
+const api=(p,o={})=>fetch(API.url+p,{...o,headers:{...(o.headers||{}),'X-Nexion-Key':localStorage.getItem('nexion_key')||''}});
+
+/* ---------- state ---------- */
+let files=[];            // {file?, remote?, key?, kind, url}
+let status=null;
+let selected=new Set();
+let whenMode='now', schedSel=null, schedData={days:{}};
+let pickMonth=new Date(); pickMonth.setDate(1);
+let calMonth=new Date(); calMonth.setDate(1);
+
+const PLATS=[
+  {id:'instagram',name:'Instagram',c:'#E1306C',svg:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.2" fill="#fff" stroke="none"/></svg>'},
+  {id:'facebook',name:'Facebook',c:'#1877F2',svg:'<svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M15.5 8.5H13V7c0-.8.2-1.2 1.3-1.2h1.5V2.6C15.3 2.5 14.3 2.4 13.2 2.4c-2.4 0-4 1.5-4 4.1v2H6.5V12h2.7v9.6H13V12h2.9l.6-3.5z"/></svg>'},
+  {id:'tiktok',name:'TikTok',c:'#111',svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82H12.4v11.53a2.6 2.6 0 1 1-2.6-2.6c.27 0 .53.04.78.12V8.9a5.82 5.82 0 0 0-.78-.05 5.94 5.94 0 1 0 5.94 5.94V9.7a7.5 7.5 0 0 0 4.13 1.23V7.72a4.3 4.3 0 0 1-3.27-1.9z"/></svg>'},
+  {id:'linkedin',name:'LinkedIn',c:'#0A66C2',svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M4.98 3.5A2.49 2.49 0 1 1 5 8.48a2.49 2.49 0 0 1-.02-4.98zM3 9.75h4v11.5H3zM9.5 9.75h3.83v1.57h.06c.53-1 1.84-2.06 3.78-2.06 4.05 0 4.8 2.66 4.8 6.12v5.87h-4v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-2 1.35-2 2.75v5.29h-3.99z"/></svg>'},
+];
+const LIMITS={instagram:2200,tiktok:2200,facebook:5000,linkedin:3000};
+const PLAT_C={instagram:'#E1306C',tiktok:'#e5e5e5',facebook:'#1877F2',linkedin:'#0A66C2',twitter:'#9ca3af'};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dstr=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const isVid=e=>['mp4','mov','webm'].includes(e);
+
+/* ---------- lock ---------- */
+async function tryKey(k){
+  const r=await fetch(API.url+'/status',{headers:{'X-Nexion-Key':k}});
+  return r.status!==401;
+}
+function showLock(){
+  $('#lock').style.display='flex';
+  $('#lockIn').focus();
+}
+$('#lockBtn').onclick=async()=>{
+  const k=$('#lockIn').value.trim();
+  if(!k) return;
+  $('#lockErr').textContent='';
+  $('#lockBtn').textContent='Checking…';
+  try{
+    if(await tryKey(k)){ localStorage.setItem('nexion_key',k); $('#lock').style.display='none'; boot(); }
+    else{ $('#lockErr').textContent='Wrong key.'; $('#lockIn').classList.add('shake'); setTimeout(()=>$('#lockIn').classList.remove('shake'),350); }
+  }catch(e){ $('#lockErr').textContent='Network error — try again.'; }
+  $('#lockBtn').textContent='Unlock';
+};
+$('#lockIn').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#lockBtn').click(); });
+$('#lockOut').onclick=e=>{ e.preventDefault(); localStorage.removeItem('nexion_key'); location.hash=''; location.reload(); };
+
+/* ---------- nav ---------- */
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#pagePub').style.display=b.dataset.page==='pub'?'grid':'none';
+  $('#pageCal').style.display=b.dataset.page==='cal'?'block':'none';
+  if(b.dataset.page==='cal') renderCalBig();
+});
+
+/* ---------- platforms ---------- */
+function renderPlats(){
+  const box=$('#plats'); box.innerHTML='';
+  PLATS.forEach(p=>{
+    const s=status?.[p.id], on=s?.connected;
+    const el=document.createElement('div');
+    el.className='plat'+(selected.has(p.id)?' sel':'')+(on?'':' dis');
+    el.innerHTML=`<div class="ic" style="background:${p.c}">${p.svg}</div><div><div class="nm">${p.name}</div><div class="ac">${on?('@'+String(s.username).replace(/^@/,'')):'not connected'}</div></div><div class="chk">✓</div>`;
+    if(on) el.onclick=()=>{ selected.has(p.id)?selected.delete(p.id):selected.add(p.id); renderPlats(); updateBtn(); };
+    box.appendChild(el);
+  });
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  try{ status=await (await api('/status')).json(); }catch(e){ status=null; }
+  const ok=status&&PLATS.some(p=>status[p.id]?.connected);
+  $('#conn').innerHTML=ok
+    ? '<span class="dot on"></span><span style="font-size:12px;color:var(--muted)">ContentStudio connected</span>'
+    : '<span class="dot"></span><span style="font-size:12px;color:var(--red)">offline — check worker/key</span>';
+  if(status) PLATS.forEach(p=>{ if(status[p.id]?.connected&&['instagram','tiktok'].includes(p.id)) selected.add(p.id); });
+  renderPlats(); updateBtn();
+  await loadSchedule();
+  applyHash();
+}
+
+/* ---------- hash prefill: #media=key1,key2&caption=...&when=YYYY-MM-DD HH:MM ---------- */
+function applyHash(){
+  if(!location.hash.length) return;
+  const h=new URLSearchParams(location.hash.slice(1));
+  const media=(h.get('media')||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(media.length){
+    files=media.map(k=>{
+      const ext=(k.split('.').pop()||'').toLowerCase();
+      return {remote:true,key:k,kind:isVid(ext)?'video':'image',url:API.url+'/v/'+k};
+    });
+    renderPreviews();
+  }
+  if(h.get('caption')){ $('#caption').value=h.get('caption'); $('#caption').dispatchEvent(new Event('input')); }
+  const when=h.get('when');
+  if(when){
+    const [d,t]=when.split(/[T ]/);
+    whenMode='schedule'; schedSel=d;
+    if(t) $('#schedTime').value=t.slice(0,5);
+    pickMonth=new Date(d+'T00:00'); pickMonth.setDate(1);
+    document.querySelectorAll('#whenTabs button').forEach(x=>x.classList.toggle('on',x.dataset.when==='schedule'));
+    $('#schedPanel').style.display='block';
+    renderPick();
+  }
+  updateBtn();
+}
+
+/* ---------- media ---------- */
+const drop=$('#drop'), fileIn=$('#file');
+drop.onclick=()=>fileIn.click();
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+fileIn.onchange=()=>addFiles(fileIn.files);
+function addFiles(list){
+  for(const f of list){
+    const kind=f.type.startsWith('video')?'video':'image';
+    if(kind==='video'){ files=files.filter(x=>x.kind!=='video'); if(files.length){alert('Video ne može zajedno sa slikama — video ide sam.');files=[];} }
+    else if(files.some(x=>x.kind==='video')) files=[];
+    files.push({file:f,kind,url:URL.createObjectURL(f)});
+    if(kind==='video') break;
+  }
+  renderPreviews(); updateBtn();
+}
+function renderPreviews(){
+  const box=$('#previews');
+  box.style.display=files.length?'grid':'none';
+  drop.style.display=files.length?'none':'flex';
+  box.innerHTML='';
+  files.forEach((m,i)=>{
+    const d=document.createElement('div'); d.className='pv';
+    d.innerHTML=(m.kind==='video'?`<video src="${m.url}" muted loop autoplay playsinline></video>`:`<img src="${m.url}">`)
+      +`<span class="badge">${m.kind==='video'?'VIDEO':'IMG '+(i+1)}</span><button class="x">✕</button>`;
+    d.querySelector('.x').onclick=e=>{e.stopPropagation();if(!m.remote)URL.revokeObjectURL(m.url);files.splice(i,1);renderPreviews();updateBtn();};
+    box.appendChild(d);
+  });
+  if(files.length&&!files.some(f=>f.kind==='video')){ const add=document.createElement('div'); add.className='pv'; add.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--panel2);color:var(--muted);font-size:26px;'; add.textContent='+'; add.onclick=()=>fileIn.click(); box.appendChild(add); }
+}
+
+/* ---------- caption ---------- */
+const cap=$('#caption');
+cap.oninput=()=>{
+  const n=cap.value.length; $('#capCount').textContent=n+' characters';
+  const lims=[...selected].map(p=>({p,l:LIMITS[p]})).filter(x=>n>x.l);
+  $('#capLimit').innerHTML=lims.length?`<span class="warn">over limit: ${lims.map(x=>x.p+' ('+x.l+')').join(', ')}</span>`:'';
+  updateBtn();
+};
+const SUGG=['#MotionOps','#FieldService','#ContractorLife','#HomeServices','#SmallBusiness','#Scheduling','#Invoicing','#TradeBusiness'];
+SUGG.forEach(h=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=h;
+  c.onclick=()=>{ if(!cap.value.includes(h)){ cap.value=(cap.value.trimEnd()+(cap.value.trim()?' ':'')+h); cap.dispatchEvent(new Event('input')); } };
+  $('#hashRow').appendChild(c); });
+
+/* ---------- when tabs ---------- */
+schedSel=dstr(new Date());
+document.querySelectorAll('#whenTabs button').forEach(b=>b.onclick=()=>{
+  whenMode=b.dataset.when;
+  document.querySelectorAll('#whenTabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#schedPanel').style.display=whenMode==='schedule'?'block':'none';
+  if(whenMode==='schedule') renderPick();
+  updateBtn();
+});
+document.querySelectorAll('.times [data-qt]').forEach(b=>b.onclick=()=>{ $('#schedTime').value=b.dataset.qt; updateBtn(); });
+$('#schedTime').oninput=updateBtn;
+$('#freeSlot').onclick=()=>{
+  const items=(schedData.days[schedSel]||[]).map(x=>{const[h,m]=x.time.split(':').map(Number);return h*60+m;});
+  for(let t=8*60;t<=22*60;t+=30){ if(items.every(x=>Math.abs(x-t)>=120)){ $('#schedTime').value=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); break; } }
+  updateBtn();
+};
+
+/* ---------- schedule data ---------- */
+async function loadSchedule(fresh){
+  try{ schedData=await (await api('/scheduled'+(fresh?'?fresh=1':''))).json(); }catch(e){ schedData={days:{}}; }
+  renderPick(); renderCalBig();
+}
+/* after create/edit/delete: CS list lags a moment — wait, then bypass cache */
+async function reloadAfterMutation(){
+  await new Promise(r=>setTimeout(r,1500));
+  await loadSchedule(true);
+}
+
+/* month cells helper: returns array of Date|null (nulls = leading blanks, Monday first) */
+function monthCells(m){
+  const first=new Date(m.getFullYear(),m.getMonth(),1);
+  const lead=(first.getDay()+6)%7; // Mon=0
+  const dim=new Date(m.getFullYear(),m.getMonth()+1,0).getDate();
+  const cells=Array(lead).fill(null);
+  for(let d=1;d<=dim;d++) cells.push(new Date(m.getFullYear(),m.getMonth(),d));
+  return cells;
+}
+
+/* ---------- schedule month picker ---------- */
+function renderPick(){
+  $('#pickTitle').textContent=MONTHS[pickMonth.getMonth()]+' '+pickMonth.getFullYear();
+  const grid=$('#pickGrid'); grid.innerHTML='';
+  const today=dstr(new Date());
+  monthCells(pickMonth).forEach(d=>{
+    const c=document.createElement('div');
+    if(!d){ c.className='mday blank'; grid.appendChild(c); return; }
+    const ds=dstr(d), items=schedData.days[ds]||[], past=ds<today;
+    c.className='mday'+(past?' past':'')+(ds===schedSel?' sel':'');
+    const dots=items.slice(0,4).map(x=>`<span style="background:${PLAT_C[(x.platforms[0]||{}).platform]||'#8a8a8a'}"></span>`).join('')+(items.length>4?`<span style="width:auto;font-size:8px;color:var(--muted)">+${items.length-4}</span>`:'');
+    c.innerHTML=`<div class="dn${ds===today?' today':''}">${d.getDate()}</div><div class="dots">${dots}</div>`;
+    if(!past) c.onclick=()=>{schedSel=ds;renderPick();updateBtn();};
+    grid.appendChild(c);
+  });
+  const items=schedData.days[schedSel]||[];
+  $('#busyList').innerHTML=items.length
+    ? '<b>Already scheduled that day:</b><br>'+items.map(x=>`<span class="t">${x.time}</span> · ${x.platforms.map(p=>p.platform).join('+')}${x.text?' · “'+x.text.replace(/</g,'&lt;').slice(0,40)+'”':''}`).join('<br>')
+    : 'Nothing scheduled on this day yet.';
+}
+$('#pickPrev').onclick=()=>{ pickMonth.setMonth(pickMonth.getMonth()-1); renderPick(); };
+$('#pickNext').onclick=()=>{ pickMonth.setMonth(pickMonth.getMonth()+1); renderPick(); };
+$('#pickToday').onclick=()=>{ pickMonth=new Date(); pickMonth.setDate(1); schedSel=dstr(new Date()); renderPick(); updateBtn(); };
+
+/* ---------- big calendar page ---------- */
+let dragEnt=null; // {entry, fromDate}
+let moving=false; // guard against double drop / rapid re-drag
+function renderCalBig(){
+  $('#calTitle').textContent=MONTHS[calMonth.getMonth()]+' '+calMonth.getFullYear();
+  const grid=$('#calGrid'); grid.innerHTML='';
+  const today=dstr(new Date());
+  monthCells(calMonth).forEach(d=>{
+    const c=document.createElement('div');
+    if(!d){ c.className='cday blank'; grid.appendChild(c); return; }
+    const ds=dstr(d), items=schedData.days[ds]||[];
+    c.className='cday'+(ds===today?' today':'');
+    c.dataset.date=ds;
+    c.innerHTML=`<div class="dn">${d.getDate()}</div>`;
+    items.slice(0,4).forEach(x=>{
+      const e=document.createElement('div'); e.className='ent';
+      e.innerHTML=`<span class="pd" style="background:${PLAT_C[(x.platforms[0]||{}).platform]||'#8a8a8a'}"></span><span class="tm">${x.time}</span><span class="tx">${(x.platforms.map(p=>p.platform[0].toUpperCase()+p.platform.slice(1)).join('+'))}${x.text?' · '+x.text.replace(/</g,'&lt;'):''}</span>`;
+      e.title='Click to edit · drag to move';
+      e.onclick=ev=>{ ev.stopPropagation(); openEdit(x,ds); };
+      if(x.id){
+        e.draggable=true;
+        e.ondragstart=ev=>{ dragEnt={entry:x,fromDate:ds}; e.classList.add('dragging'); ev.dataTransfer.effectAllowed='move'; };
+        e.ondragend=()=>{ dragEnt=null; e.classList.remove('dragging'); document.querySelectorAll('.cday.dropok').forEach(x2=>x2.classList.remove('dropok')); };
+      }
+      c.appendChild(e);
+    });
+    if(items.length>4){ const m=document.createElement('div'); m.className='more'; m.textContent='+'+(items.length-4)+' more'; c.appendChild(m); }
+    // drop target (future days only)
+    if(ds>=today){
+      c.ondragover=ev=>{ if(dragEnt&&dragEnt.fromDate!==ds){ ev.preventDefault(); c.classList.add('dropok'); } };
+      c.ondragleave=()=>c.classList.remove('dropok');
+      c.ondrop=async ev=>{
+        ev.preventDefault(); c.classList.remove('dropok');
+        if(!dragEnt||dragEnt.fromDate===ds||moving) return;
+        const {entry}=dragEnt; dragEnt=null; moving=true;
+        c.style.opacity='.55';
+        try{ await moveOrEdit(entry,{when:ds+' '+entry.time+':00'},`Moving to ${ds}…`); }
+        finally{ moving=false; c.style.opacity=''; }
+      };
+    }
+    grid.appendChild(c);
+  });
+  $('#calLegend').innerHTML=PLATS.map(p=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${PLAT_C[p.id]}"></span>${p.name}</span>`).join('')
+    +'<span style="margin-left:auto;color:var(--muted2)">click = edit · drag = move</span>';
+}
+
+/* ---------- edit modal ---------- */
+let edEntry=null, edDate=null, edMediaState={images:[],video:null};
+function renderEdMedia(){
+  const box=$('#edMedia'); box.innerHTML='';
+  const mk=(inner,onX)=>{
+    const w=document.createElement('div');
+    w.style.cssText='position:relative;display:inline-block';
+    w.innerHTML=inner;
+    const x=document.createElement('button');
+    x.textContent='✕';
+    x.style.cssText='position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1';
+    x.onclick=onX;
+    w.appendChild(x);
+    box.appendChild(w);
+  };
+  if(edMediaState.video) mk(`<video src="${edMediaState.video}" muted loop autoplay playsinline></video>`,()=>{ edMediaState.video=null; renderEdMedia(); });
+  edMediaState.images.forEach((u,i)=>mk(`<img src="${u}">`,()=>{ edMediaState.images.splice(i,1); renderEdMedia(); }));
+  const add=document.createElement('button');
+  add.textContent='+';
+  add.title='Add / replace media';
+  add.style.cssText='width:84px;height:105px;border-radius:8px;border:1.5px dashed var(--border2);background:var(--panel2);color:var(--muted);font-size:24px;cursor:pointer';
+  add.onclick=()=>$('#edFile').click();
+  box.appendChild(add);
+}
+$('#edFile')?null:document.body.insertAdjacentHTML('beforeend','<input type="file" id="edFile" accept="video/mp4,video/quicktime,video/webm,image/png,image/jpeg,image/webp,image/gif" multiple hidden>');
+document.body.addEventListener('change',async e=>{
+  if(e.target.id!=='edFile') return;
+  const list=[...e.target.files]; e.target.value='';
+  $('#edStage').textContent='Uploading media…';
+  try{
+    for(const f of list){
+      const ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+      const up=await (await api('/upload?ext='+ext,{method:'PUT',body:f})).json();
+      if(up.error) throw new Error(up.error);
+      if(up.kind==='video'){ edMediaState={images:[],video:up.url}; break; }
+      edMediaState.video=null; edMediaState.images.push(up.url);
+    }
+    renderEdMedia(); $('#edStage').textContent='';
+  }catch(err){ $('#edStage').textContent='Upload failed: '+err.message; }
+});
+function openEdit(x,ds){
+  if(!x.id){ alert('This post has no id — refresh (↻) and try again.'); return; }
+  edEntry=x; edDate=ds;
+  edMediaState={images:[...(x.media?.images||[])],video:x.media?.video||null};
+  $('#edDot').style.background=PLAT_C[(x.platforms[0]||{}).platform]||'#8a8a8a';
+  renderEdMedia();
+  $('#edText').value=x.text||'';
+  $('#edDate').value=ds; $('#edDate').min=dstr(new Date());
+  $('#edTime').value=x.time;
+  $('#edPl').innerHTML=x.platforms.map(p=>`<span>${p.platform}${p.name?' · '+p.name:''}</span>`).join('');
+  $('#edStage').textContent='';
+  $('#edModal').classList.add('open');
+}
+function closeEdit(){ $('#edModal').classList.remove('open'); edEntry=null; }
+$('#edCancel').onclick=closeEdit;
+$('#edModal').onclick=e=>{ if(e.target.id==='edModal') closeEdit(); };
+
+async function moveOrEdit(entry,changes,label){
+  // recreate with changes, delete original (CS API has no update)
+  const body={
+    text: changes.text!==undefined?changes.text:entry.text,
+    media: changes.media!==undefined?changes.media:entry.media,
+    accounts: entry.accounts,
+    platforms: entry.platforms.map(p=>p.platform),
+    when: changes.when,
+  };
+  const st=$('#edModal').classList.contains('open')?$('#edStage'):null;
+  if(st) st.textContent=label;
+  try{
+    const r=await (await api('/posts/'+entry.id+'/replace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(!r.ok) throw new Error(r.error||'failed');
+    if(r.oldDeleted===false){
+      // replacement created but original survived — retry the delete so it doesn't linger as a duplicate
+      await api('/posts/'+entry.id,{method:'DELETE'}).catch(()=>{});
+    }
+    closeEdit();
+    await reloadAfterMutation();
+    return true;
+  }catch(e){
+    if(st) st.textContent='Failed: '+e.message; else alert('Move failed: '+e.message);
+    return false;
+  }
+}
+$('#edSave').onclick=async()=>{
+  if(!edEntry) return;
+  const d=$('#edDate').value, t=$('#edTime').value||edEntry.time;
+  if(new Date(d+'T'+t)<new Date()){ $('#edStage').textContent='That time is in the past.'; return; }
+  if(!edMediaState.video&&!edMediaState.images.length){ $('#edStage').textContent='Post needs at least one visual.'; return; }
+  $('#edSave').disabled=true;
+  await moveOrEdit(edEntry,{text:$('#edText').value,media:{images:edMediaState.images,video:edMediaState.video},when:d+' '+t+':00'},'Saving…');
+  $('#edSave').disabled=false;
+};
+$('#edDel').onclick=async()=>{
+  if(!edEntry) return;
+  if(!confirm('Delete this scheduled post?')) return;
+  $('#edDel').disabled=true; $('#edStage').textContent='Deleting…';
+  try{
+    const r=await (await api('/posts/'+edEntry.id,{method:'DELETE'})).json();
+    if(!r.ok) throw new Error((r.response&&JSON.stringify(r.response).slice(0,120))||r.error||'failed');
+    closeEdit(); await reloadAfterMutation();
+  }catch(e){ $('#edStage').textContent='Failed: '+e.message; }
+  $('#edDel').disabled=false;
+};
+$('#calPrev').onclick=()=>{ calMonth.setMonth(calMonth.getMonth()-1); renderCalBig(); };
+$('#calNext').onclick=()=>{ calMonth.setMonth(calMonth.getMonth()+1); renderCalBig(); };
+$('#calToday').onclick=()=>{ calMonth=new Date(); calMonth.setDate(1); renderCalBig(); };
+$('#calRefresh').onclick=loadSchedule;
+
+/* ---------- publish ---------- */
+function updateBtn(){
+  const b=$('#pubBtn');
+  const ready=files.length&&selected.size;
+  b.disabled=!ready;
+  let verb=whenMode==='schedule'?'Schedule':whenMode==='draft'?'Save draft':'Publish now';
+  let suffix='';
+  if(whenMode==='schedule'){ const d=new Date(schedSel+'T00:00'); suffix=' · '+d.getDate()+'.'+(d.getMonth()+1)+'. '+($('#schedTime').value||''); }
+  b.textContent=ready?`${verb} → ${[...selected].map(p=>PLATS.find(x=>x.id===p).name).join(' + ')}${suffix}`:'Add a visual & pick platforms';
+}
+$('#pubBtn').onclick=async()=>{
+  const bar=$('#bar i'), stage=$('#stage'), res=$('#results');
+  $('#prog').style.display='block'; res.style.display='none'; res.innerHTML=''; bar.style.width='3%';
+  $('#pubBtn').disabled=true;
+  try{
+    let when=null;
+    if(whenMode==='draft') when='draft';
+    else if(whenMode==='schedule'){
+      when=schedSel+' '+($('#schedTime').value||'18:00')+':00';
+      if(new Date(schedSel+'T'+($('#schedTime').value||'18:00'))<new Date()) throw new Error('That time is in the past.');
+    }
+    // 1) upload local media (remote already има key)
+    const keys=[];
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      if(f.remote){ keys.push(f.key); bar.style.width=(3+((i+1)/files.length)*57)+'%'; continue; }
+      const ext=(f.file.name.split('.').pop()||(f.kind==='video'?'mp4':'jpg')).toLowerCase();
+      stage.textContent=`Uploading ${f.kind} ${i+1}/${files.length}…`;
+      const up=await new Promise((ok,no)=>{ const x=new XMLHttpRequest();
+        x.open('PUT',API.url+'/upload?ext='+ext); x.setRequestHeader('X-Nexion-Key',localStorage.getItem('nexion_key')||'');
+        x.upload.onprogress=e=>{ if(e.lengthComputable) bar.style.width=(3+((i+e.loaded/e.total)/files.length)*57)+'%'; };
+        x.onload=()=>x.status<300?ok(JSON.parse(x.responseText)):no(new Error('upload '+x.status+': '+x.responseText.slice(0,120)));
+        x.onerror=()=>no(new Error('upload failed')); x.send(f.file); });
+      keys.push(up.key);
+    }
+    // 2) post per platform
+    const plats=[...selected]; res.style.display='flex';
+    for(let i=0;i<plats.length;i++){
+      const pl=plats[i];
+      stage.textContent=(when==='draft'?'Saving draft':when?'Scheduling':'Publishing')+' → '+pl+'…';
+      bar.style.width=(60+((i+1)/plats.length)*38)+'%';
+      const r=await (await api('/post/'+pl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys,caption:cap.value,when})})).json();
+      const row=document.createElement('div');
+      if(r.ok){ row.className='res ok'; row.innerHTML=`✅ <b style="text-transform:capitalize">${pl}</b> · ${r.account||''} ${when==='draft'?'· draft saved':when?'· scheduled '+when:'· publishing'} · <a href="${r.url}" target="_blank">open ↗</a>`; }
+      else{ row.className='res err'; row.innerHTML=`❌ <b style="text-transform:capitalize">${pl}</b> · ${(r.error||'failed').replace(/</g,'&lt;').slice(0,180)}`; }
+      res.appendChild(row);
+    }
+    bar.style.width='100%'; stage.textContent='Done.';
+    reloadAfterMutation();
+  }catch(e){ stage.textContent='Failed: '+e.message; bar.style.width='0%'; }
+  $('#pubBtn').disabled=false; updateBtn();
+};
+
+/* ---------- start ---------- */
+window.addEventListener('hashchange',()=>{ if(localStorage.getItem('nexion_key')) applyHash(); });
+updateBtn();
+(async()=>{
+  const k=localStorage.getItem('nexion_key');
+  if(k&&await tryKey(k).catch(()=>false)) boot();
+  else{ localStorage.removeItem('nexion_key'); showLock(); }
+})();
+</script>
+</body>
+</html>
